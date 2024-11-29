@@ -1,0 +1,7 @@
+[project]
+dependencies = ["typer"]
+name = "paas-charm-cli"
+version = "0.1.0"
+
+[project.scripts]
+paas-charm = "paas_charm_cli.cli:app"
