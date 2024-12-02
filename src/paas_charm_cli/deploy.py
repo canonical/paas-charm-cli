@@ -1,5 +1,6 @@
 """Deploy the PaaS Charm application."""
 
+import pathlib
 import subprocess
 
 
@@ -8,5 +9,5 @@ def deploy() -> None:
     print("creating rock")
     subprocess.check_output(["rockcraft", "pack"])
     print("creating charm")
-    subprocess.check_output(["cd", "charm", "&&", "charmcraft", "pack"])
+    subprocess.check_output(["charmcraft", "pack"], cwd=pathlib.Path() / "charm")
     print("deployed application")

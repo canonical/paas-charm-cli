@@ -18,6 +18,14 @@ jobs:
           lxd init --auto
           sudo snap install charmcraft --classic
           sudo snap install rockcraft --classic
+
+          # Microk8s
+          sudo snap install microk8s --channel 1.31-strict/stable
+          sudo adduser $USER snap_microk8s
+          newgrp snap_microk8s
+          sudo microk8s enable hostpath-storage
+          sudo microk8s enable registry
+          sudo microk8s enable ingress
       - name: deploy
         run: |
           cd app
