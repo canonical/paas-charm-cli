@@ -14,7 +14,7 @@ def deploy() -> None:
         (pathlib.Path() / "deploy" / "terraform.tfvars.json").read_text()
     )
 
-    print("creating and uploading rock")
+    print("creating rock")
     rock_info = yaml.safe_load((pathlib.Path() / "rockcraft.yaml").read_text())
     rockcraft_pack_out = subprocess.check_output(
         ["rockcraft", "pack"], stderr=subprocess.STDOUT
@@ -23,6 +23,7 @@ def deploy() -> None:
     rock_name = re.search(
         "^Packed (.+\\.rock)", rockcraft_pack_out, re.MULTILINE
     ).group(1)
+    print("uploading rock to registry")
     skopeo_copy_out = subprocess.check_output(
         [
             "rockcraft.skopeo",
@@ -34,12 +35,13 @@ def deploy() -> None:
             f"{rock_info['name']}:{rock_info['version']}",
         ],
         stderr=subprocess.STDOUT,
-    )
+    ).decode(encoding="utf-8")
     print(skopeo_copy_out)
 
     print("creating charm")
     charmcraft_pack_out = subprocess.check_output(
         ["charmcraft", "pack"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "charm"
-    )
+    ).decode(encoding="utf-8")
     print(charmcraft_pack_out)
+
     print("deployed application")
