@@ -15,8 +15,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install .
-          sudo snap install charmcraft
-          sudo snap install rockcraft
+          sudo snap install charmcraft --classic
+          sudo snap install rockcraft --classic
       - name: deploy
         run: |
           cd app
