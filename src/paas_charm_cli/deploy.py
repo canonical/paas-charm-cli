@@ -15,7 +15,7 @@ def deploy() -> None:
     )
 
     print("creating and uploading rock")
-    rock_info = yaml.load((pathlib.Path() / "rockcraft.yaml").read_text())
+    rock_info = yaml.safe_load((pathlib.Path() / "rockcraft.yaml").read_text())
     rockcraft_pack_out = subprocess.check_output(["rockcraft", "pack"]).decode(
         encoding="utf-8"
     )
