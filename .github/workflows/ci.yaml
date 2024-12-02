@@ -26,7 +26,7 @@ jobs:
           sudo microk8s enable hostpath-storage
           sudo microk8s enable registry
           sudo microk8s enable ingress
-      - name: deploy
+      - name: Deploy
         run: |
           cd app
           paas-charm deploy

@@ -1,5 +1,5 @@
 [project]
-dependencies = ["typer"]
+dependencies = ["typer", "PyYAML"]
 name = "paas-charm-cli"
 version = "0.1.0"
 
