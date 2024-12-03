@@ -53,7 +53,8 @@ def deploy() -> None:
 
     print("deploying app")
     juju_add_model_out = subprocess.check_output(
-        ["juju", "add-model", deploy_variables["model_name"]], stderr=subprocess.STDOUT
+        ["juju", "add-model", deploy_variables["model"]["name"]],
+        stderr=subprocess.STDOUT,
     ).decode(encoding="utf-8")
     print(juju_add_model_out)
     juju_deploy_out = subprocess.check_output(
