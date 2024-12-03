@@ -94,12 +94,17 @@ def deploy() -> None:
         ["terraform", "plan"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "deploy"
     ).decode(encoding="utf-8")
     print(terraform_plan_out)
-    terraform_apply_out = subprocess.check_output(
-        ["terraform", "apply", "-auto-approve"],
-        stderr=subprocess.STDOUT,
-        cwd=pathlib.Path() / "deploy",
-    ).decode(encoding="utf-8")
-    print(terraform_apply_out)
+    try:
+        terraform_apply_out = subprocess.check_output(
+            ["terraform", "apply", "-auto-approve"],
+            stderr=subprocess.STDOUT,
+            cwd=pathlib.Path() / "deploy",
+        ).decode(encoding="utf-8")
+        print(terraform_apply_out)
+    except subprocess.CalledProcessError as exc:
+        print(exc.output)
+        print(exc.stdout)
+        print(exc.stderr)
     juju_status_out = subprocess.check_output(
         ["juju", "status"], stderr=subprocess.STDOUT
     ).decode(encoding="utf-8")
