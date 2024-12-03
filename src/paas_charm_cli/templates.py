@@ -35,7 +35,7 @@ resource "juju_integration" "app_to_ingress" {
   model = juju_model.{{ model_resource_name }}.name
 
   application {
-    name     = {{ app_name }}
+    name     = "{{ app_name }}"
     endpoint = "ingress"
   }
 

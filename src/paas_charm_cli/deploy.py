@@ -87,15 +87,15 @@ def deploy() -> None:
     print(main_tf)
     (pathlib.Path() / "deploy" / "main.tf").write_text(main_tf)
     terraform_init_out = subprocess.check_output(
-        ["terraform", "init"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "charm"
+        ["terraform", "init"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "deploy"
     ).decode(encoding="utf-8")
     print(terraform_init_out)
     terraform_plan_out = subprocess.check_output(
-        ["terraform", "plan"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "charm"
+        ["terraform", "plan"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "deploy"
     ).decode(encoding="utf-8")
     print(terraform_plan_out)
     terraform_apply_out = subprocess.check_output(
-        ["terraform", "apply"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "charm"
+        ["terraform", "apply"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "deploy"
     ).decode(encoding="utf-8")
     print(terraform_apply_out)
     juju_status_out = subprocess.check_output(
