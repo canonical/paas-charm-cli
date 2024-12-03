@@ -18,6 +18,7 @@ jobs:
           lxd init --auto
           sudo snap install charmcraft --classic
           sudo snap install rockcraft --classic
+          sudo snap install terraform --classic
 
           # Microk8s
           sudo snap install microk8s --channel 1.31-strict/stable

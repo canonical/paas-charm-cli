@@ -6,6 +6,7 @@ import re
 import subprocess
 
 import yaml
+from jinja2 import Environment, FileSystemLoader
 
 
 def deploy() -> None:
@@ -68,6 +69,35 @@ def deploy() -> None:
         cwd=pathlib.Path() / "charm",
     ).decode(encoding="utf-8")
     print(juju_deploy_out)
+    juju_status_out = subprocess.check_output(
+        ["juju", "status"], stderr=subprocess.STDOUT
+    ).decode(encoding="utf-8")
+    print(juju_status_out)
+
+    print("deploying integrations")
+    environment = Environment(
+        loader=FileSystemLoader(pathlib.Path(__file__).parent / "templates")
+    )
+    main_tf_template = environment.get_template("main.tf.j2")
+    main_tf = main_tf_template.render(
+        model_resource_name=charm_info["name"],
+        model_resource_name=deploy_variables["model_name"],
+        app_name=charm_info["name"],
+    )
+    print(main_tf)
+    (pathlib.Path() / "deploy" / "main.tf").write_text(main_tf)
+    terraform_init_out = subprocess.check_output(
+        ["terraform", "init"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "charm"
+    ).decode(encoding="utf-8")
+    print(terraform_init_out)
+    terraform_plan_out = subprocess.check_output(
+        ["terraform", "plan"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "charm"
+    ).decode(encoding="utf-8")
+    print(terraform_plan_out)
+    terraform_apply_out = subprocess.check_output(
+        ["terraform", "apply"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "charm"
+    ).decode(encoding="utf-8")
+    print(terraform_apply_out)
     juju_status_out = subprocess.check_output(
         ["juju", "status"], stderr=subprocess.STDOUT
     ).decode(encoding="utf-8")
