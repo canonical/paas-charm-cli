@@ -30,9 +30,9 @@ jobs:
           # Juju
           sudo snap install juju
           mkdir -p ~/.local/share
+          sudo mkdir -p ~/.local/share
           sudo microk8s status --wait-ready
-          newgrp snap_microk8s
-          juju bootstrap microk8s k8s-controller
+          sudo juju bootstrap microk8s k8s-controller
       - name: Deploy
         run: |
           cd app
