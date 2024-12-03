@@ -32,7 +32,7 @@ def deploy() -> None:
             "copy",
             "--dest-tls-verify=false",
             f"oci-archive:{rock_name}",
-            app_image,
+            f"docker://{app_image}",
         ],
         stderr=subprocess.STDOUT,
     ).decode(encoding="utf-8")
