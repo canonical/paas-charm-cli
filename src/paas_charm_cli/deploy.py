@@ -47,7 +47,7 @@ def deploy() -> None:
     ).decode(encoding="utf-8")
     print(charmcraft_pack_out)
     charm_name = re.search(
-        "^Packed (.+\\.charm)", rockcraft_pack_out, re.MULTILINE
+        "^Packed (.+\\.charm)", charmcraft_pack_out, re.MULTILINE
     ).group(1)
 
     print("deploying app")
@@ -55,7 +55,7 @@ def deploy() -> None:
         ["juju", "add-model", deploy_variables["model_name"]], stderr=subprocess.STDOUT
     ).decode(encoding="utf-8")
     print(juju_add_model_out)
-    juju_deploy_model_out = subprocess.check_output(
+    juju_deploy_out = subprocess.check_output(
         [
             "juju",
             "deploy",
@@ -67,7 +67,7 @@ def deploy() -> None:
         stderr=subprocess.STDOUT,
         cwd=pathlib.Path() / "charm",
     ).decode(encoding="utf-8")
-    print(juju_deploy_model_out)
+    print(juju_deploy_out)
     juju_status_out = subprocess.check_output(
         ["juju", "status"], stderr=subprocess.STDOUT
     ).decode(encoding="utf-8")
