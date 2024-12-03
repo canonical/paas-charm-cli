@@ -95,7 +95,9 @@ def deploy() -> None:
     ).decode(encoding="utf-8")
     print(terraform_plan_out)
     terraform_apply_out = subprocess.check_output(
-        ["terraform", "apply"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "deploy"
+        ["terraform", "apply", "-auto-approve"],
+        stderr=subprocess.STDOUT,
+        cwd=pathlib.Path() / "deploy",
     ).decode(encoding="utf-8")
     print(terraform_apply_out)
     juju_status_out = subprocess.check_output(
