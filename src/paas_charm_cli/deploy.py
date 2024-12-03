@@ -77,7 +77,7 @@ def deploy() -> None:
 
     print("deploying integrations")
     environment = Environment(
-        loader=FileSystemLoader(pathlib.Path(__file__).parent / "templates")
+        loader=FileSystemLoader(pathlib.Path(__file__).parent.parent / "templates")
     )
     main_tf_template = environment.get_template("main.tf.j2")
     main_tf = main_tf_template.render(
