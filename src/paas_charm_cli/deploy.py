@@ -5,8 +5,10 @@ import pathlib
 import re
 import subprocess
 
+import jinja2
 import yaml
-from jinja2 import Environment, FileSystemLoader
+
+from . import templates
 
 
 def deploy() -> None:
@@ -76,10 +78,8 @@ def deploy() -> None:
     print(juju_status_out)
 
     print("deploying integrations")
-    environment = Environment(
-        loader=FileSystemLoader(pathlib.Path(__file__).parent.parent / "templates")
-    )
-    main_tf_template = environment.get_template("main.tf.j2")
+    environment = jinja2.Environment()
+    main_tf_template = environment.from_string(templates.MAIN_TF)
     main_tf = main_tf_template.render(
         model_resource_name=charm_info["name"],
         app_name=charm_info["name"],

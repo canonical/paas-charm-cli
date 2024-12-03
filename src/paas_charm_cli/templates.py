@@ -1,3 +1,4 @@
+MAIN_TF = """
 terraform {
   required_providers {
     juju = {
@@ -43,3 +44,4 @@ resource "juju_integration" "app_to_ingress" {
     endpoint = "ingress"
   }
 }
+"""
