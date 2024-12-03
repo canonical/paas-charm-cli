@@ -81,7 +81,6 @@ def deploy() -> None:
     main_tf_template = environment.get_template("main.tf.j2")
     main_tf = main_tf_template.render(
         model_resource_name=charm_info["name"],
-        model_resource_name=deploy_variables["model_name"],
         app_name=charm_info["name"],
     )
     print(main_tf)
