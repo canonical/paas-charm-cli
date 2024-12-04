@@ -17,7 +17,7 @@ jobs:
           pip install .
           lxd init --auto
           sudo snap install charmcraft --classic --channel latest/edge
-          sudo snap install rockcraft --classic --channel lates/edge
+          sudo snap install rockcraft --classic --channel latest/edge
           sudo snap install terraform --classic
 
           # Microk8s
