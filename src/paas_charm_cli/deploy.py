@@ -90,6 +90,17 @@ def deploy() -> None:
         ["terraform", "init"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "deploy"
     ).decode(encoding="utf-8")
     print(terraform_init_out)
+    terraform_import_out = subprocess.check_output(
+        [
+            "terraform",
+            "import",
+            f"juju_model.{deploy_variables['model']['name']}",
+            deploy_variables["model"]["name"],
+        ],
+        stderr=subprocess.STDOUT,
+        cwd=pathlib.Path() / "deploy",
+    ).decode(encoding="utf-8")
+    print(terraform_import_out)
     terraform_plan_out = subprocess.check_output(
         ["terraform", "plan"], stderr=subprocess.STDOUT, cwd=pathlib.Path() / "deploy"
     ).decode(encoding="utf-8")
