@@ -1,5 +1,4 @@
-MAIN_TF = """
-terraform {
+MAIN_TF = """terraform {
   required_providers {
     juju = {
       version = "~> 0.13.0"
@@ -19,6 +18,18 @@ resource "juju_model" "{{ model_resource_name }}" {
   }
 }
 
+resource "juju_application" "{{ app_name }}" {
+  name = "{{ app_name }}"
+
+  model = juju_model.{{ model_resource_name }}.name
+
+  charm {
+    name = "{{ app_name }}"
+  }
+
+  units = var.app.units
+}
+
 resource "juju_application" "ingress" {
   name = "nginx-ingress-integrator"
 
@@ -29,13 +40,18 @@ resource "juju_application" "ingress" {
   }
 
   units = 1
+
+  config = {
+    service-hostname = var.ingress.config.service-hostname
+    path-routes = var.ingress.config.path-routes
+  }
 }
 
 resource "juju_integration" "app_to_ingress" {
   model = juju_model.{{ model_resource_name }}.name
 
   application {
-    name     = "{{ app_name }}"
+    name     = juju_application.{{ app_name }}.name
     endpoint = "ingress"
   }
 
