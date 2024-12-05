@@ -60,4 +60,110 @@ resource "juju_integration" "app_to_ingress" {
     endpoint = "ingress"
   }
 }
+
+resource "juju_application" "prometheus-k8s" {
+  name = "prometheus-k8s"
+
+  model = juju_model.{{ model_resource_name }}.name
+
+  charm {
+    name = "prometheus-k8s"
+  }
+
+  units = 1
+}
+
+resource "juju_integration" "app_to_prometheus" {
+  model = juju_model.{{ model_resource_name }}.name
+
+  application {
+    name     = juju_application.{{ app_name }}.name
+    endpoint = "metrics-endpoint"
+  }
+
+  application {
+    name     = juju_application.prometheus-k8s.name
+    endpoint = "metrics-endpoint"
+  }
+}
+
+resource "juju_application" "loki-k8s" {
+  name = "loki-k8s"
+
+  model = juju_model.{{ model_resource_name }}.name
+
+  charm {
+    name = "loki-k8s"
+  }
+
+  units = 1
+}
+
+resource "juju_integration" "app_to_loki" {
+  model = juju_model.{{ model_resource_name }}.name
+
+  application {
+    name     = juju_application.{{ app_name }}.name
+    endpoint = "logging"
+  }
+
+  application {
+    name     = juju_application.loki-k8s.name
+    endpoint = "logging"
+  }
+}
+
+resource "juju_application" "grafana-k8s" {
+  name = "grafana-k8s"
+
+  model = juju_model.{{ model_resource_name }}.name
+
+  charm {
+    name = "grafana-k8s"
+  }
+
+  units = 1
+}
+
+resource "juju_integration" "prometheus_to_grafana" {
+  model = juju_model.{{ model_resource_name }}.name
+
+  application {
+    name     = juju_application.prometheus-k8s.name
+    endpoint = "grafana-source"
+  }
+
+  application {
+    name     = juju_application.grafana-k8s.name
+    endpoint = "grafana-source"
+  }
+}
+
+resource "juju_integration" "loki_to_grafana" {
+  model = juju_model.{{ model_resource_name }}.name
+
+  application {
+    name     = juju_application.loki-k8s.name
+    endpoint = "grafana-source"
+  }
+
+  application {
+    name     = juju_application.grafana-k8s.name
+    endpoint = "grafana-source"
+  }
+}
+
+resource "juju_integration" "app_to_grafana" {
+  model = juju_model.{{ model_resource_name }}.name
+
+  application {
+    name     = juju_application.{{ app_name }}.name
+    endpoint = "grafana-dashboard"
+  }
+
+  application {
+    name     = juju_application.grafana-k8s.name
+    endpoint = "grafana-dashboard"
+  }
+}
 """
