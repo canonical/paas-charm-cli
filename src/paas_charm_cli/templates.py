@@ -194,7 +194,7 @@ resource "juju_integration" "app_to_postgresql" {
   }
 
   application {
-    name     = juju_application.postgres-k8s.name
+    name     = juju_application.postgresql-k8s.name
     endpoint = "postgresql"
   }
 }"""

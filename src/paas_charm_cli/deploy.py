@@ -286,8 +286,8 @@ def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> 
 
 
 def _terraform_apply() -> None:
-    """Deploy default integrations for the app."""
-    print("deploying default integrations")
+    """Apply the terraform plan."""
+    print("Deploying integrations and configuring.")
     terraform_apply_out = subprocess.check_output(
         ["terraform", "apply", "-auto-approve"],
         stderr=subprocess.STDOUT,
