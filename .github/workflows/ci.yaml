@@ -37,5 +37,7 @@ jobs:
         run: |
           cd app
           paas-charm deploy
+          juju wait-for application sample-app
+          juju wait-for application nginx-ingress-integrator
       # - name: Setup tmate session
       #   uses: canonical/action-tmate@main
