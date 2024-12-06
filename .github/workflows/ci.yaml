@@ -37,5 +37,5 @@ jobs:
         run: |
           cd app
           paas-charm deploy
-      - name: Setup tmate session
-        uses: canonical/action-tmate@main
+      # - name: Setup tmate session
+      #   uses: canonical/action-tmate@main

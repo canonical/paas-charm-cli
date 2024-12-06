@@ -25,7 +25,7 @@ def deploy() -> None:
 
     app_image = _create_upload_image(image_registry=deploy_variables["image_registry"])
     charm_file_name = _create_charm()
-    _deploy_app(
+    _create_model_deploy_app(
         model_name=deploy_variables["model"]["name"],
         charm_file_name=charm_file_name,
         charm_name=charm_info["name"],
@@ -80,7 +80,7 @@ def _create_upload_image(image_registry: str) -> str:
 
 
 def _create_charm() -> str:
-    """Pack rthe charm.
+    """Pack the charm.
 
     Returns:
         The name of the created charm.
@@ -95,10 +95,10 @@ def _create_charm() -> str:
     return re.search("^Packed (.+\\.charm)", charmcraft_pack_out, re.MULTILINE).group(1)
 
 
-def _deploy_app(
+def _create_model_deploy_app(
     model_name: str, charm_file_name: str, charm_name: str, app_image: str
 ) -> None:
-    """Deploy the app.
+    """Create the model if it doesn't exist and deploy the app.
 
     Args:
         model_name: The name of the model to deploy the app into.
@@ -107,28 +107,109 @@ def _deploy_app(
         app_image: The name of the image for the app.
     """
     print("deploying app")
+    full_model_name = _create_get_model(model_name=model_name)
+    _deploy_refresh_app(
+        full_model_name=full_model_name,
+        charm_name=charm_name,
+        charm_file_name=charm_file_name,
+        app_image=app_image,
+    )
+
+    juju_status_out = subprocess.check_output(
+        ["juju", "status"], stderr=subprocess.STDOUT
+    ).decode(encoding="utf-8")
+    print(juju_status_out)
+
+
+def _create_get_model(model_name: str) -> str:
+    """Create the model if it doesn't exist or get the full name of the model if it does.
+
+    Args:
+        model_name: The name of the model to be created.
+
+    Returns:
+        The full name of the model.
+    """
+    """Create or get the full model name."""
+    juju_models = json.loads(
+        subprocess.check_output(
+            ["juju", "models", "--format", "json"],
+            stderr=subprocess.STDOUT,
+        ).decode(encoding="utf-8")
+    )
+    full_model_name: str | None = next(
+        (
+            model["name"]
+            for model in juju_models["models"]
+            if model["name"].split("/")[1] == model_name
+        ),
+        None,
+    )
+    if full_model_name:
+        return full_model_name
+
     juju_add_model_out = subprocess.check_output(
         ["juju", "add-model", model_name],
         stderr=subprocess.STDOUT,
     ).decode(encoding="utf-8")
     print(juju_add_model_out)
-    juju_deploy_out = subprocess.check_output(
+    full_model_name_match = re.search(
+        "^^Added '(.*)' model.* user '(.*)'$", juju_add_model_out
+    )
+    return f"{full_model_name_match.group(2)}/{full_model_name_match.group(1)}"
+
+
+def _deploy_refresh_app(
+    full_model_name: str, charm_name: str, charm_file_name: str, app_image: str
+) -> None:
+    """Deploy or refresh the app.
+
+    Args:
+        full_model_name: The model to deploy the app into.
+        charm_name: The name of the charm to be deployed.
+        charm_file_name: The name of the charm file to be deployed.
+        app_image: The name of the image for the app.
+    """
+    juju_status_for_model = json.loads(
+        subprocess.check_output(
+            ["juju", "status", "--model", full_model_name, "--format", "json"],
+            stderr=subprocess.STDOUT,
+        ).decode(encoding="utf-8")
+    )
+    app_deployed = charm_name in juju_status_for_model["applications"]
+
+    if not app_deployed:
+        juju_deploy_out = subprocess.check_output(
+            [
+                "juju",
+                "deploy",
+                f"./{charm_file_name}",
+                charm_name,
+                "--resource",
+                f"flask-app-image={app_image}",
+            ],
+            stderr=subprocess.STDOUT,
+            cwd=pathlib.Path() / _CHARM_DIR,
+        ).decode(encoding="utf-8")
+        print(juju_deploy_out)
+        return
+
+    juju_refresh_out = subprocess.check_output(
         [
             "juju",
-            _DEPLOY_DIR,
-            f"./{charm_file_name}",
+            "refresh",
             charm_name,
+            "--path",
+            f"./{charm_file_name}",
             "--resource",
             f"flask-app-image={app_image}",
+            "--model",
+            full_model_name,
         ],
         stderr=subprocess.STDOUT,
         cwd=pathlib.Path() / _CHARM_DIR,
     ).decode(encoding="utf-8")
-    print(juju_deploy_out)
-    juju_status_out = subprocess.check_output(
-        ["juju", "status"], stderr=subprocess.STDOUT
-    ).decode(encoding="utf-8")
-    print(juju_status_out)
+    print(juju_refresh_out)
 
 
 def _init_terraform(charm_name: str, model_name: str) -> None:
