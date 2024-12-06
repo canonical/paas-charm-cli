@@ -178,7 +178,7 @@ resource "juju_application" "postgresql-k8s" {
     name = "postgresql-k8s"
   }
 
-  storage_directives {
+  storage_directives = {
     trust = true
   }
 
