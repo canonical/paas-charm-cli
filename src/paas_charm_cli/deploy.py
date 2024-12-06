@@ -227,40 +227,54 @@ def _init_terraform(charm_name: str, model_name: str) -> None:
     )
     print(main_tf)
     (pathlib.Path() / _DEPLOY_DIR / "main.tf").write_text(main_tf)
-    terraform_init_out = subprocess.check_output(
-        ["terraform", "init"],
+
+    # Initialise terraform if not done already
+    if not next((pathlib.Path() / _DEPLOY_DIR).glob("*.tfstate"), None):
+        terraform_init_out = subprocess.check_output(
+            ["terraform", "init"],
+            stderr=subprocess.STDOUT,
+            cwd=pathlib.Path() / _DEPLOY_DIR,
+        ).decode(encoding="utf-8")
+        print(terraform_init_out)
+
+    # Get existing resources
+    terraform_state_list_out = subprocess.check_output(
+        ["terraform", "state", "list"],
         stderr=subprocess.STDOUT,
         cwd=pathlib.Path() / _DEPLOY_DIR,
     ).decode(encoding="utf-8")
-    print(terraform_init_out)
-    terraform_model_import_out = subprocess.check_output(
-        ["terraform", "import", f"juju_model.{model_name}", model_name],
-        stderr=subprocess.STDOUT,
-        cwd=pathlib.Path() / _DEPLOY_DIR,
-    ).decode(encoding="utf-8")
-    print(terraform_model_import_out)
-    terraform_app_import_out = subprocess.check_output(
-        [
-            "terraform",
-            "import",
-            f"juju_application.{charm_name}",
-            f"{model_name}:{charm_name}",
-        ],
-        stderr=subprocess.STDOUT,
-        cwd=pathlib.Path() / _DEPLOY_DIR,
-    ).decode(encoding="utf-8")
-    print(terraform_app_import_out)
+    terraform_resources = set(terraform_state_list_out.splitlines())
+    print(terraform_state_list_out)
+
+    # Import the model if not there already
+    model_resource_name = f"juju_model.{model_name}"
+    if model_resource_name not in terraform_resources:
+        terraform_model_import_out = subprocess.check_output(
+            ["terraform", "import", model_resource_name, model_name],
+            stderr=subprocess.STDOUT,
+            cwd=pathlib.Path() / _DEPLOY_DIR,
+        ).decode(encoding="utf-8")
+        print(terraform_model_import_out)
+
+    # Import app if not there already
+    app_resource_name = f"juju_application.{charm_name}"
+    if app_resource_name not in terraform_resources:
+        terraform_app_import_out = subprocess.check_output(
+            [
+                "terraform",
+                "import",
+                f"juju_application.{charm_name}",
+                f"{model_name}:{charm_name}",
+            ],
+            stderr=subprocess.STDOUT,
+            cwd=pathlib.Path() / _DEPLOY_DIR,
+        ).decode(encoding="utf-8")
+        print(terraform_app_import_out)
 
 
 def _deploy_integrations() -> None:
     """Deploy integrations for the app."""
     print("deploying integrations")
-    terraform_plan_out = subprocess.check_output(
-        ["terraform", "plan"],
-        stderr=subprocess.STDOUT,
-        cwd=pathlib.Path() / _DEPLOY_DIR,
-    ).decode(encoding="utf-8")
-    print(terraform_plan_out)
     terraform_apply_out = subprocess.check_output(
         ["terraform", "apply", "-auto-approve"],
         stderr=subprocess.STDOUT,
