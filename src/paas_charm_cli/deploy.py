@@ -25,19 +25,18 @@ def deploy() -> None:
 
     app_image = _create_upload_image(image_registry=deploy_variables["image_registry"])
     charm_file_name = _create_charm()
+    model_name = deploy_variables["model"]["name"]
     _create_model_deploy_app(
-        model_name=deploy_variables["model"]["name"],
+        model_name=model_name,
         charm_file_name=charm_file_name,
         charm_name=charm_info["name"],
         app_image=app_image,
     )
-    _init_terraform(
-        charm_name=charm_info["name"], model_name=deploy_variables["model"]["name"]
-    )
+    _init_terraform(charm_name=charm_info["name"], model_name=model_name)
     _deploy_integrations()
 
     juju_status_out = subprocess.check_output(
-        ["juju", "status"], stderr=subprocess.STDOUT
+        ["juju", "status", "--model", model_name], stderr=subprocess.STDOUT
     ).decode(encoding="utf-8")
     print(juju_status_out)
     print("deployed application")
@@ -116,7 +115,7 @@ def _create_model_deploy_app(
     )
 
     juju_status_out = subprocess.check_output(
-        ["juju", "status"], stderr=subprocess.STDOUT
+        ["juju", "status", "--model", model_name], stderr=subprocess.STDOUT
     ).decode(encoding="utf-8")
     print(juju_status_out)
 
