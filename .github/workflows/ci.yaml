@@ -39,6 +39,23 @@ jobs:
           paas-charm deploy
           juju wait-for application sample-app
           juju wait-for application nginx-ingress-integrator
-          curl http://sample-app --resolve sample-app:80:127.0.0.1 | grep "Hello, world!"
-      # - name: Setup tmate session
-      #   uses: canonical/action-tmate@main
+          curl http://sample-app --resolve sample-app:80:127.0.0.1 | grep 'Hello, world!'
+          cd ..
+
+          # Change to using database
+          cp db-app/app.py app/
+          cp db-app/migrate.py app/
+          cp db-app/requirements.txt app/
+          cp db-app/rockcraft.yaml app/
+          cp db-app/charm/charmcraft.yaml app/charm/
+
+          cd app
+          paas-charm deploy
+          juju wait-for application sample-app
+          juju wait-for application nginx-ingress-integrator
+          juju wait-for application postgresql-k8s
+          curl http://sample-app/visitors --resolve sample-app:80:127.0.0.1 | grep '0'
+          curl http://sample-app --resolve sample-app:80:127.0.0.1 | grep 'Hello, world!'
+          curl http://sample-app/visitors --resolve sample-app:80:127.0.0.1 | grep '1'
+          curl http://sample-app --resolve sample-app:80:127.0.0.1 | grep 'Hello, world!'
+          curl http://sample-app/visitors --resolve sample-app:80:127.0.0.1 | grep '2'

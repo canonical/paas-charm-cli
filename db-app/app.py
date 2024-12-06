@@ -22,8 +22,7 @@ def index():
         )
         conn.commit()
 
-    greeting = app.config.get("GREETING", "Hello, world!")
-    return f"{greeting}\n"
+    return "Hello, world!\n"
 
 
 @app.route("/visitors")
