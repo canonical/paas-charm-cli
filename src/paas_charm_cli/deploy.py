@@ -175,7 +175,15 @@ def _deploy_refresh_app(
     """
     juju_status_for_model = json.loads(
         subprocess.check_output(
-            ["juju", "status", "--model", full_model_name, "--format", "json"],
+            [
+                "juju",
+                "status",
+                "--model",
+                full_model_name,
+                "--format",
+                "json",
+                "--quiet",
+            ],
             stderr=subprocess.STDOUT,
         ).decode(encoding="utf-8")
     )

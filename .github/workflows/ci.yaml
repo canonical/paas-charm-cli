@@ -39,5 +39,6 @@ jobs:
           paas-charm deploy
           juju wait-for application sample-app
           juju wait-for application nginx-ingress-integrator
+          curl http://sample-app --resolve sample-app:80:127.0.0.1 | grep "Hello, world!"
       # - name: Setup tmate session
       #   uses: canonical/action-tmate@main
