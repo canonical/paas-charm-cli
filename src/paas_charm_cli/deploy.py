@@ -250,7 +250,10 @@ def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> 
     (pathlib.Path() / _DEPLOY_DIR / "main.tf").write_text(main_tf)
 
     # Initialise terraform if not done already
-    if not next((pathlib.Path() / _DEPLOY_DIR).glob("*.tfstate"), None):
+    terraform_state_exists = bool(
+        next((pathlib.Path() / _DEPLOY_DIR).glob("*.tfstate"), None)
+    )
+    if not terraform_state_exists:
         terraform_init_out = subprocess.check_output(
             ["terraform", "init"],
             stderr=subprocess.STDOUT,
@@ -259,13 +262,15 @@ def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> 
         print(terraform_init_out)
 
     # Get existing resources
-    terraform_state_list_out = subprocess.check_output(
-        ["terraform", "state", "list"],
-        stderr=subprocess.STDOUT,
-        cwd=pathlib.Path() / _DEPLOY_DIR,
-    ).decode(encoding="utf-8")
-    terraform_resources = set(terraform_state_list_out.splitlines())
-    print(terraform_state_list_out)
+    terraform_resources = set()
+    if terraform_state_exists:
+        terraform_state_list_out = subprocess.check_output(
+            ["terraform", "state", "list"],
+            stderr=subprocess.STDOUT,
+            cwd=pathlib.Path() / _DEPLOY_DIR,
+        ).decode(encoding="utf-8")
+        terraform_resources = set(terraform_state_list_out.splitlines())
+        print(terraform_state_list_out)
 
     # Import the model if not there already
     model_resource_name = f"juju_model.{model_name}"
