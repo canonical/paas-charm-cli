@@ -178,9 +178,7 @@ resource "juju_application" "postgresql-k8s" {
     name = "postgresql-k8s"
   }
 
-  storage_directives = {
-    trust = true
-  }
+  trust = true
 
   units = 1
 }
@@ -195,6 +193,6 @@ resource "juju_integration" "app_to_postgresql" {
 
   application {
     name     = juju_application.postgresql-k8s.name
-    endpoint = "postgresql"
+    endpoint = "database"
   }
 }"""
