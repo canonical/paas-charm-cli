@@ -19,7 +19,7 @@ def deploy() -> None:
     deploy_variables = json.loads(
         (pathlib.Path() / _DEPLOY_DIR / "terraform.tfvars.json").read_text()
     )
-    charm_info = yaml.safe_load(
+    charmcraft_yaml: dict = yaml.safe_load(
         (pathlib.Path() / _CHARM_DIR / "charmcraft.yaml").read_text()
     )
 
@@ -29,11 +29,15 @@ def deploy() -> None:
     _create_model_deploy_app(
         model_name=model_name,
         charm_file_name=charm_file_name,
-        charm_name=charm_info["name"],
+        charm_name=charmcraft_yaml["name"],
         app_image=app_image,
     )
-    _init_terraform(charm_name=charm_info["name"], model_name=model_name)
-    _deploy_integrations()
+    _init_terraform(
+        charm_name=charmcraft_yaml["name"],
+        model_name=model_name,
+        charmcraft_yaml=charmcraft_yaml,
+    )
+    _terraform_apply()
 
     juju_status_out = subprocess.check_output(
         ["juju", "status", "--model", model_name], stderr=subprocess.STDOUT
@@ -211,18 +215,28 @@ def _deploy_refresh_app(
     print(juju_refresh_out)
 
 
-def _init_terraform(charm_name: str, model_name: str) -> None:
+def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> None:
     """Initialise terraform and import model and app.
 
     Args:
         charm_name: The name of the charm for the app.
         model_name: The name of the model the app is deployed in.
     """
+    app_requires = set()
+    if "requires" in charmcraft_yaml:
+        app_requires = set(charmcraft_yaml["requires"].keys())
+
     print("initialising terraform and importing model and app")
     environment = jinja2.Environment()
+    postgres_k8s_tf_template = environment.from_string(templates.POSTGRES_K8S_TF)
+    postgres_k8s_tf = postgres_k8s_tf_template.render(
+        model_resource_name=charm_name, app_name=charm_name
+    )
     main_tf_template = environment.from_string(templates.MAIN_TF)
     main_tf = main_tf_template.render(
-        model_resource_name=charm_name, app_name=charm_name
+        model_resource_name=charm_name,
+        app_name=charm_name,
+        postgres_k8s_tf=postgres_k8s_tf if "postgresql" in app_requires else "",
     )
     print(main_tf)
     (pathlib.Path() / _DEPLOY_DIR / "main.tf").write_text(main_tf)
@@ -271,9 +285,9 @@ def _init_terraform(charm_name: str, model_name: str) -> None:
         print(terraform_app_import_out)
 
 
-def _deploy_integrations() -> None:
-    """Deploy integrations for the app."""
-    print("deploying integrations")
+def _terraform_apply() -> None:
+    """Deploy default integrations for the app."""
+    print("deploying default integrations")
     terraform_apply_out = subprocess.check_output(
         ["terraform", "apply", "-auto-approve"],
         stderr=subprocess.STDOUT,

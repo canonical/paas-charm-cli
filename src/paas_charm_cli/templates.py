@@ -165,5 +165,36 @@ resource "juju_integration" "app_to_grafana" {
     name     = juju_application.grafana-k8s.name
     endpoint = "grafana-dashboard"
   }
-}
+}{{ postgres_k8s_tf }}
 """
+POSTGRES_K8S_TF = """
+
+resource "juju_application" "postgresql-k8s" {
+  name = "postgresql-k8s"
+
+  model = juju_model.{{ model_resource_name }}.name
+
+  charm {
+    name = "postgresql-k8s"
+  }
+
+  storage_directives {
+    trust = true
+  }
+
+  units = 1
+}
+
+resource "juju_integration" "app_to_postgresql" {
+  model = juju_model.{{ model_resource_name }}.name
+
+  application {
+    name     = juju_application.{{ app_name }}.name
+    endpoint = "postgresql"
+  }
+
+  application {
+    name     = juju_application.postgres-k8s.name
+    endpoint = "postgresql"
+  }
+}"""
