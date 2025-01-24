@@ -16,6 +16,8 @@ resource "juju_model" "{{ model_resource_name }}" {
     name   = var.model.cloud.name
     region = var.model.cloud.region
   }
+
+  constraints = "arch={{ architecture }}"
 }
 
 resource "juju_application" "{{ app_name }}" {

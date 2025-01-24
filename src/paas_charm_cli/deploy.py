@@ -19,6 +19,11 @@ def deploy() -> None:
     charmcraft_yaml: dict = yaml.safe_load(
         (pathlib.Path() / constants.CHARM_DIR / "charmcraft.yaml").read_text()
     )
+    dkpg_print_architecture_out = subprocess.check_output(
+        ["dpkg", "--print-architecture"],
+        stderr=subprocess.STDOUT,
+    ).decode(encoding="utf-8")
+    architecture = dkpg_print_architecture_out.strip()
 
     app_image = _create_upload_image(image_registry=deploy_variables["image_registry"])
     charm_file_name = _create_charm()
@@ -28,11 +33,13 @@ def deploy() -> None:
         charm_file_name=charm_file_name,
         charm_name=charmcraft_yaml["name"],
         app_image=app_image,
+        architecture=architecture,
     )
     _init_terraform(
         charm_name=charmcraft_yaml["name"],
         model_name=model_name,
         charmcraft_yaml=charmcraft_yaml,
+        architecture=architecture,
     )
     _terraform_apply()
 
@@ -96,7 +103,11 @@ def _create_charm() -> str:
 
 
 def _create_model_deploy_app(
-    model_name: str, charm_file_name: str, charm_name: str, app_image: str
+    model_name: str,
+    charm_file_name: str,
+    charm_name: str,
+    app_image: str,
+    architecture: str,
 ) -> None:
     """Create the model if it doesn't exist and deploy the app.
 
@@ -107,7 +118,9 @@ def _create_model_deploy_app(
         app_image: The name of the image for the app.
     """
     print("deploying app")
-    full_model_name = _create_get_model(model_name=model_name)
+    full_model_name = _create_get_model(
+        model_name=model_name, architecture=architecture
+    )
     _deploy_refresh_app(
         full_model_name=full_model_name,
         charm_name=charm_name,
@@ -121,7 +134,7 @@ def _create_model_deploy_app(
     print(juju_status_out)
 
 
-def _create_get_model(model_name: str) -> str:
+def _create_get_model(model_name: str, architecture: str) -> str:
     """Create the model if it doesn't exist or get the full name of the model if it does.
 
     Args:
@@ -157,11 +170,6 @@ def _create_get_model(model_name: str) -> str:
         "^^Added '(.*)' model.* user '(.*)'$", juju_add_model_out
     )
 
-    dkpg_print_architecture_out = subprocess.check_output(
-        ["dpkg", "--print-architecture"],
-        stderr=subprocess.STDOUT,
-    ).decode(encoding="utf-8")
-    architecture = dkpg_print_architecture_out.strip()
     juju_set_model_constraint_out = subprocess.check_output(
         [
             "juju",
@@ -238,7 +246,9 @@ def _deploy_refresh_app(
     print(juju_refresh_out)
 
 
-def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> None:
+def _init_terraform(
+    charm_name: str, model_name: str, charmcraft_yaml: dict, architecture: str
+) -> None:
     """Initialise terraform and import model and app.
 
     Args:
@@ -260,6 +270,7 @@ def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> 
         model_resource_name=charm_name,
         app_name=charm_name,
         postgres_k8s_tf=postgres_k8s_tf if "postgresql" in app_requires else "",
+        architecture=architecture,
     )
     print(main_tf)
     (pathlib.Path() / constants.DEPLOY_DIR / "main.tf").write_text(main_tf)
