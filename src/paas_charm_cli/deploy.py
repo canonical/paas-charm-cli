@@ -8,19 +8,16 @@ import subprocess
 import jinja2
 import yaml
 
-from . import templates
-
-_DEPLOY_DIR = "deploy"
-_CHARM_DIR = "charm"
+from . import constants, templates
 
 
 def deploy() -> None:
     """Deploy the PaaS Charm application."""
     deploy_variables = json.loads(
-        (pathlib.Path() / _DEPLOY_DIR / "terraform.tfvars.json").read_text()
+        (pathlib.Path() / constants.DEPLOY_DIR / "terraform.tfvars.json").read_text()
     )
     charmcraft_yaml: dict = yaml.safe_load(
-        (pathlib.Path() / _CHARM_DIR / "charmcraft.yaml").read_text()
+        (pathlib.Path() / constants.CHARM_DIR / "charmcraft.yaml").read_text()
     )
 
     app_image = _create_upload_image(image_registry=deploy_variables["image_registry"])
@@ -92,7 +89,7 @@ def _create_charm() -> str:
     charmcraft_pack_out = subprocess.check_output(
         ["charmcraft", "pack"],
         stderr=subprocess.STDOUT,
-        cwd=pathlib.Path() / _CHARM_DIR,
+        cwd=pathlib.Path() / constants.CHARM_DIR,
     ).decode(encoding="utf-8")
     print(charmcraft_pack_out)
     return re.search("^Packed (.+\\.charm)", charmcraft_pack_out, re.MULTILINE).group(1)
@@ -200,7 +197,7 @@ def _deploy_refresh_app(
                 f"flask-app-image={app_image}",
             ],
             stderr=subprocess.STDOUT,
-            cwd=pathlib.Path() / _CHARM_DIR,
+            cwd=pathlib.Path() / constants.CHARM_DIR,
         ).decode(encoding="utf-8")
         print(juju_deploy_out)
         return
@@ -218,7 +215,7 @@ def _deploy_refresh_app(
             full_model_name,
         ],
         stderr=subprocess.STDOUT,
-        cwd=pathlib.Path() / _CHARM_DIR,
+        cwd=pathlib.Path() / constants.CHARM_DIR,
     ).decode(encoding="utf-8")
     print(juju_refresh_out)
 
@@ -247,17 +244,17 @@ def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> 
         postgres_k8s_tf=postgres_k8s_tf if "postgresql" in app_requires else "",
     )
     print(main_tf)
-    (pathlib.Path() / _DEPLOY_DIR / "main.tf").write_text(main_tf)
+    (pathlib.Path() / constants.DEPLOY_DIR / "main.tf").write_text(main_tf)
 
     # Initialise terraform if not done already
     terraform_state_exists = bool(
-        next((pathlib.Path() / _DEPLOY_DIR).glob("*.tfstate"), None)
+        next((pathlib.Path() / constants.DEPLOY_DIR).glob("*.tfstate"), None)
     )
     if not terraform_state_exists:
         terraform_init_out = subprocess.check_output(
             ["terraform", "init"],
             stderr=subprocess.STDOUT,
-            cwd=pathlib.Path() / _DEPLOY_DIR,
+            cwd=pathlib.Path() / constants.DEPLOY_DIR,
         ).decode(encoding="utf-8")
         print(terraform_init_out)
 
@@ -267,7 +264,7 @@ def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> 
         terraform_state_list_out = subprocess.check_output(
             ["terraform", "state", "list"],
             stderr=subprocess.STDOUT,
-            cwd=pathlib.Path() / _DEPLOY_DIR,
+            cwd=pathlib.Path() / constants.DEPLOY_DIR,
         ).decode(encoding="utf-8")
         terraform_resources = set(terraform_state_list_out.splitlines())
         print(terraform_state_list_out)
@@ -278,7 +275,7 @@ def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> 
         terraform_model_import_out = subprocess.check_output(
             ["terraform", "import", model_resource_name, model_name],
             stderr=subprocess.STDOUT,
-            cwd=pathlib.Path() / _DEPLOY_DIR,
+            cwd=pathlib.Path() / constants.DEPLOY_DIR,
         ).decode(encoding="utf-8")
         print(terraform_model_import_out)
 
@@ -293,7 +290,7 @@ def _init_terraform(charm_name: str, model_name: str, charmcraft_yaml: dict) -> 
                 f"{model_name}:{charm_name}",
             ],
             stderr=subprocess.STDOUT,
-            cwd=pathlib.Path() / _DEPLOY_DIR,
+            cwd=pathlib.Path() / constants.DEPLOY_DIR,
         ).decode(encoding="utf-8")
         print(terraform_app_import_out)
 
@@ -304,6 +301,6 @@ def _terraform_apply() -> None:
     terraform_apply_out = subprocess.check_output(
         ["terraform", "apply", "-auto-approve"],
         stderr=subprocess.STDOUT,
-        cwd=pathlib.Path() / _DEPLOY_DIR,
+        cwd=pathlib.Path() / constants.DEPLOY_DIR,
     ).decode(encoding="utf-8")
     print(terraform_apply_out)

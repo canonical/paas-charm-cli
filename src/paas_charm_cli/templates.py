@@ -196,3 +196,51 @@ resource "juju_integration" "app_to_postgresql" {
     endpoint = "database"
   }
 }"""
+VARIABLES_TF = """variable "image_registry" {
+  type = string
+}
+
+variable "app" {
+  type = object({
+    units = number
+  })
+}
+
+variable "ingress" {
+  type = object({
+    config = object({
+      service-hostname = string,
+      path-routes      = string,
+    })
+  })
+}
+
+variable "model" {
+  type = object({
+    name = string
+    cloud = object({
+      name   = string
+      region = string
+    })
+  })
+}
+"""
+TERRAFORM_TFVARS_JSON = """{
+    "image_registry": "<your image registry>",
+    "app": {
+        "units": 1
+    },
+    "model": {
+        "name": "{{ app_name }}",
+        "cloud": {
+            "name": "<your juju cloud>",
+            "region": "<your juju region>"
+        }
+    },
+    "ingress": {
+        "config": {
+            "service-hostname": "{{ app_name }}",
+            "path-routes": "/"
+        }
+    }
+}"""
