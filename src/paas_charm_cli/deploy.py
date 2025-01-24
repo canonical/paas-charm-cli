@@ -156,6 +156,24 @@ def _create_get_model(model_name: str) -> str:
     full_model_name_match = re.search(
         "^^Added '(.*)' model.* user '(.*)'$", juju_add_model_out
     )
+
+    dkpg_print_architecture_out = subprocess.check_output(
+        ["dpkg", "--print-architecture"],
+        stderr=subprocess.STDOUT,
+    ).decode(encoding="utf-8")
+    architecture = dkpg_print_architecture_out.strip()
+    juju_set_model_constraint_out = subprocess.check_output(
+        [
+            "juju",
+            "set-model-constraints",
+            "-m",
+            model_name,
+            f"arch={architecture}",
+        ],
+        stderr=subprocess.STDOUT,
+    ).decode(encoding="utf-8")
+    print(juju_set_model_constraint_out)
+
     return f"{full_model_name_match.group(2)}/{full_model_name_match.group(1)}"
 
 
